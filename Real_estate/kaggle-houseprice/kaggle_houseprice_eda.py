@@ -56,13 +56,13 @@ print (corr_matrix['SalePrice'].nlargest(7))
 #take out most correlated
 
 
-# 1) heatmap
-sns.heatmap(corr_matrix, vmax=0.8, square=False)
-plt.xticks(rotation=45, fontsize= 7);plt.yticks(rotation=45, fontsize= 7);
-
-# 2) scatter
-sns.pairplot(df)
-
-
+# # 1) heatmap
+# sns.heatmap(corr_matrix, vmax=0.8, square=False)
+# plt.xticks(rotation=45, fontsize= 7);plt.yticks(rotation=45, fontsize= 7);
+#
+# # 2) scatter
+# sns.pairplot(df)
+#
+#
 
 
