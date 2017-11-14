@@ -9,30 +9,27 @@ https://www.kaggle.com/dansbecker/learning-to-use-xgboost
 (https://www.kaggle.com/pmarcelino/comprehensive-data-exploration-with-python)
 
 - Missions
-
 * How to deal with data that categorical&numerical mixed
 * Handling with Missing Value
 * Normality , Skewness
 * Outliers
 * FEATURE SELECTION: http://scikit-learn.org/stable/modules/feature_selection.html
 * Modeling:
-    . regularized regression
+    . regularized regression : https://www.analyticsvidhya.com/blog/2017/06/a-comprehensive-guide-for-linear-ridge-and-lasso-regression/
     . xgBoost
 
 """
 
 
 import pandas as pd
-import matplotlib.pyplot as plt
-
-import seaborn as sns
 import numpy as np
 
-from scipy.stats import norm
-from sklearn.preprocessing import StandardScaler
-from scipy import stats
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# %matplotlib inline
+# import statsmodels.api as sm
+import scipy.stats as stats
+from scipy.stats import norm
 
 # import data
 df = pd.read_csv('./kaggle-houseprice/train.csv')
@@ -49,9 +46,16 @@ sns.distplot(df['OverallQual'],kde=False)
 sns.distplot(df['SalePrice'],kde=False)
 sns.distplot(df['OverallCond'],kde=False)
 
-#skewness and kurtosi
+# Normality
+# - check with skewness and kurtosi
 print("\n- Skewness of SalePrice histogram: %f" % df['SalePrice'].skew())
 print("\n- Kurtosis of SalePrice histogram: %f" % df['SalePrice'].kurt())
+# - check with Q-Q Plot
+stats.probplot(df['SalePrice'], plot=plt)
+# - normalize
+sns.distplot(np.log(df['SalePrice']),kde=True)
+stats.probplot(np.log(df['SalePrice']), plot=plt)
+# sm.qqplot(df['SalePrice'], line='q')
 
 # check correlation btw OverQual and SalePrice
 plt.figure()
@@ -89,18 +93,19 @@ print (corr_matrix)
 
 # take out most correlated features with 'SalePrice'
 print ("-Correlation Matrix:\n", corr_matrix['SalePrice'])
-print ("-Most relavant features from correlation matrix:\n",
+print ("-Most relavant features by correlation matrix:\n",
        corr_matrix['SalePrice'].nlargest(11).index)
 
 #new correlation matrix with selected features
 new_corr = df[corr_matrix['SalePrice'].nlargest(11).index].corr()
 
 # check with heatmap w/ new corr matrix
+# highly correlated variables can be taken out among 'SalePrice' features
 plt.figure()
 sns.heatmap(new_corr, vmax=0.8, square=True)
 plt.xticks(rotation=45, fontsize= 7);plt.yticks(rotation=45, fontsize= 7);
 # plt.legend(); plt.xlabel(''); plt.ylabel('')
-plt.savefig('./figures/heatmap.png'); plt.close()
+# plt.savefig('./figures/heatmap.png'); plt.close()
 
 
 if False:
@@ -136,10 +141,10 @@ print("\n- among total number of features (%d), "
 # K-Best
 from sklearn.feature_selection import SelectKBest, mutual_info_regression, f_regression
 predictors = num_df.columns[:-1] # collect all features w/o target feature
-selection = SelectKBest(f_regression,k=5).fit(df[predictors], df['SalePrice'])
+selection = SelectKBest(f_regression, k=5).fit(df[predictors], df['SalePrice'])
 # selection = SelectKBest(mutual_info_regression,k=5).fit(df[predictors], df['SalePrice'])
 
-scores = -np.log10(selection.pvalues_)# scores = selection.scores_
+scores = -np.log(selection.pvalues_)# scores = selection.scores_
 
 plt.figure()
 plt.bar(range(len(scores)), scores)
@@ -152,11 +157,87 @@ selected_features = scores_sr.nlargest(10)
 print ("- Most relavant features by selectKbest(sklearn): \n", selected_features.index)
 
 
+""" (3) ANOVA for categorical data """
+"""
+- The one-way ANOVA tests the null hypothesis that two or more groups have the same population mean.
+- The ANOVA test has important assumptions that must be satisfied in order for the associated p-value to be valid.
+a. The samples are independent.
+b. Each sample is from a normally distributed population.
+c. The population standard deviations of the groups are all equal. This property is known as homoscedasticity.
+"""
+#we use list compression to assign our return values to cat and for simplicity
+#Read more about this technique and you will enjoy its power
+col_cat=list(cat_df.columns)
+#print(cat)
+def anova_test(inDF):
+    anv = pd.DataFrame()
+    anv['features'] = col_cat
+    pvals=[]
+    for c in col_cat:
+        samples=[]
+        for cls in inDF[c].unique():
+            s=inDF[inDF[c]==cls]['SalePrice'].values
+            samples.append(s)
+        pval=stats.f_oneway(*samples)[1]
+        pvals.append(pval)
+    anv["pval"]=pvals
+    return anv.sort_values("pval")
+
+cat_df['SalePrice']=df.SalePrice.values
+k=anova_test(cat_df)
+k['disparity']=np.log(1./k['pval'].values)
+
+plt.figure()
+sns.barplot(data=k,x="features",y="disparity")
+plt.xticks(rotation=90); plt.tight_layout()
+plt.savefig("./figures/ANOVA_categoricalfeature.png");plt.close()
+
+
 """
 ::: Model fitting :::
 """
-""" categorical predictors ??? """
+"""
+(0) Preprocessing
+- normalize the skewed data
+(** note that non-linear regression model may not need normality guaranteed  )
+- deal with missing values(done)
+- deal with outliers
+"""
+# unskew all data
+print(num_df.skew())
+skewed_features = num_df.columns[num_df.skew()>0.75]
 
-""" (1) Regularized Regression"""
+# *** note that np.log1p() is used, not np.log() ***
+# if np.log() is used, the dataframe is filled with -inf
+# http://rfriend.tistory.com/295
+num_df_norm = np.log1p(num_df[skewed_features]) # ---***
+
+X_train  = num_df_norm.drop('SalePrice', axis=1)
+y = num_df_norm['SalePrice']
+
+""" (1)-a Regularized Regression : LASSO """
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import Ridge, RidgeCV, ElasticNet, LassoCV, LassoLarsCV
+from sklearn.model_selection import cross_val_score
+
+model_lasso = LassoCV(cv=20).fit(X_train, y)
+print(model_lasso.alpha_)
+print(model_lasso.coef_)
+
+# TODO: SCORING? CROSS_VAL_SCORE??
+print(model_lasso.score(X_train,y))
+print(cross_val_score)
+
+
+""" (1)-b Regularized Regression : Elastic Net """
+
+
 
 """ (2) XGBoost """
+
+
+""" categorical predictors ???
+- Categorical only data에서 numerical value를 regression해서 찾는 방법은 없음
+(종속 변수가 Categorical이어어ㅑ 함)
+- 제한적으로 categorical data가 어떤 영향 주는지 box plot으로는 확인 할 수 있음 또는 anova
+"""
