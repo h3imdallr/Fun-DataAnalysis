@@ -10,13 +10,12 @@ https://www.kaggle.com/dansbecker/learning-to-use-xgboost
 
 - Missions
 * How to deal with data that categorical&numerical mixed
-* Handling with Missing Value
+* Handling with Missing Value: http://www.bogotobogo.com/python/scikit-learn/scikit_machine_learning_Data_Preprocessing-Missing-Data-Categorical-Data.php
 * Normality , Skewness
 * Outliers
 * FEATURE SELECTION: http://scikit-learn.org/stable/modules/feature_selection.html
 * Modeling:
     . regularized regression : https://www.analyticsvidhya.com/blog/2017/06/a-comprehensive-guide-for-linear-ridge-and-lasso-regression/
-    . xgBoost
 
 """
 
@@ -79,7 +78,6 @@ df = df.drop(col_nan, axis=1)
 df = df.fillna(df.mean())
 
 """ outelieres?"""
-
 
 
 """
@@ -217,27 +215,27 @@ y = num_df_norm['SalePrice']
 
 """ (1)-a Regularized Regression : LASSO """
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import Ridge, RidgeCV, ElasticNet, LassoCV, LassoLarsCV
+from sklearn.linear_model import ElasticNetCV, LassoCV
 from sklearn.model_selection import cross_val_score
 
 model_lasso = LassoCV(cv=20).fit(X_train, y)
-print(model_lasso.alpha_)
-print(model_lasso.coef_)
-
-# TODO: SCORING? CROSS_VAL_SCORE??
-print(model_lasso.score(X_train,y))
-print(cross_val_score)
+print("LASSO/alpha: ",model_lasso.alpha_)
+print("LASSO/Coef: ",model_lasso.coef_)
+print("LASSO/R^2 Score: ",model_lasso.score(X_train,y))
 
 
 """ (1)-b Regularized Regression : Elastic Net """
-
+model_elastic = ElasticNetCV(cv=20,random_state=0).fit(X_train,y)
+print("ElasticNet/alpha: ",model_elastic.alpha_)
+print("ElasticNet/Coef: ",model_elastic.coef_)
+print("ElasticNet/R^2 Score: ",model_elastic.score(X_train,y))
 
 
 """ (2) XGBoost """
 
 
+
 """ categorical predictors ???
-- Categorical only data에서 numerical value를 regression해서 찾는 방법은 없음
-(종속 변수가 Categorical이어어ㅑ 함)
-- 제한적으로 categorical data가 어떤 영향 주는지 box plot으로는 확인 할 수 있음 또는 anova
+- 1) one-hot encoding으로 coefficient를 구할 수 있음: https://datascienceschool.net/view-notebook/7dda1bc9ad1c435fb309ea88f672eff9/
+- OR 2) ANOVA:https://datascienceschool.net/view-notebook/a60e97ad90164e07ad236095ca74e657/
 """
