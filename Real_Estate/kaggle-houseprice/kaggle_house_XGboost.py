@@ -1,6 +1,7 @@
 """
 - https://www.kaggle.com/dansbecker/learning-to-use-xgboost
 - https://brunch.co.kr/@snobberys/137
+- http://gentlej90.tistory.com/86?category=724752
 """
 
 import numpy as np
@@ -30,9 +31,11 @@ model_XGboost = XGBRegressor().fit(X_train, y_train, verbose=False)
 
 """Evaluation"""
 """ (1) Mean Squared Error """
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 y_predict = model_XGboost.predict(X_test)
-print ("- MSE: ", mean_squared_error(y_test,y_predict))
+
+# print ("-MAE: ", mean_absolute_error(y_test, y_predict))
+print ("- RMSE: ", np.sqrt(mean_squared_error(y_test,y_predict)) )
 
 """ (2) r^2"""
 from sklearn.metrics import r2_score
@@ -40,6 +43,13 @@ print("- r^2:", r2_score(y_test,y_predict))
 
 
 """Feature Importance"""
-f_importance = model_XGboost.booster().get_score(importance_type='weight')
+# f_importance = model_XGboost.booster().get_score(importance_type='weight')
 
+""" tuning more parameters"""
+model_XGboost_tuned = XGBRegressor(n_estimators=1000, learning_rate=0.01)\
+    .fit(X_train, y_train, early_stopping_rounds=10,
+         eval_set=[(X_test,y_test)],verbose=False)
 
+y_predict_tuned = model_XGboost_tuned.predict(X_test)
+print ("- RMSE/tuned model: ", np.sqrt(mean_squared_error(y_test,y_predict_tuned)))
+print("- r^2/tuned model:", r2_score(y_test,y_predict_tuned))
