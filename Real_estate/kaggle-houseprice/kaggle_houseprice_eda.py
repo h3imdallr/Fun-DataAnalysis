@@ -60,7 +60,7 @@ stats.probplot(np.log(df['SalePrice']), plot=plt)
 plt.figure()
 sns.boxplot(df['OverallQual'], df['SalePrice'], color = 'steelblue')
 plt.legend(); plt.xlabel('OverallQual'); plt.ylabel('SalePrice')
-plt.savefig('./figures/hist_Qual_Price.png'); plt.close()
+plt.savefig('./figures/boxplot_Qual_Price.png'); plt.close()
 
 # for CATEGORICAL FEATURES
 sns.boxplot(df['SaleCondition'], df['SalePrice'])
@@ -94,7 +94,7 @@ print ("-Correlation Matrix:\n", corr_matrix['SalePrice'])
 print ("-Most relavant features by correlation matrix:\n",
        corr_matrix['SalePrice'].nlargest(11).index)
 
-#new correlation matrix with selected features
+# narrow down features to most correlated features with 'SalePrice' 
 new_corr = df[corr_matrix['SalePrice'].nlargest(11).index].corr()
 
 # check with heatmap w/ new corr matrix
