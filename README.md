@@ -9,6 +9,5 @@
 
 / **Venture Capital Industry Analysis**
 - South East Asia Funding Status until 3Q 2018: [Blog](https://medium.com/@h3imdallr/investment-status-in-south-east-asia-2014-2018-3q-d68802ff07b3) / [exhibitions](https://nbviewer.jupyter.org/github/h3imdallr/Fun-DataAnalysis/blob/master/VentureCapital/sea_funding_analysis_20183Q_cp.ipynb)  
-- South East Asia Aquisition Status Dec 15th 2018: [Blog](https://medium.com/@h3imdallr/acquisition-status-in-south-east-asia-2010-2018-dec-15th-6881d48c003e) / [exhibitions]
-(https://nbviewer.jupyter.org/github/h3imdallr/Fun-DataAnalysis/blob/master/VentureCapital/sea_acquisition_analysis_201812.ipynb)  
+- South East Asia Aquisition Status Dec 15th 2018: [Blog](https://medium.com/@h3imdallr/acquisition-status-in-south-east-asia-2010-2018-dec-15th-6881d48c003e) / [exhibitions](https://nbviewer.jupyter.org/github/h3imdallr/Fun-DataAnalysis/blob/master/VentureCapital/sea_acquisition_analysis_201812.ipynb)  
 
